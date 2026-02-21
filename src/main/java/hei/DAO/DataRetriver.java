@@ -1,6 +1,7 @@
 package hei.DAO;
 
 import hei.entity.CandidateVoteCount;
+import hei.entity.ElectionResult;
 import hei.entity.VoteSummary;
 import hei.entity.VoteType;
 import hei.entity.VoteTypeCount;
@@ -114,6 +115,38 @@ public class DataRetriver {
             }
 
             return 0.0;
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public ElectionResult findWinner() {
+        String sql = """
+        SELECT
+         c.name AS candidate_name,
+         COUNT(v.id) AS valid_vote_count
+        FROM candidate c
+        JOIN vote v ON c.id = v.candidate_id
+        WHERE v.vote_type = 'VALID'
+        GROUP BY c.name
+        ORDER BY valid_vote_count DESC
+        LIMIT 1
+        """;
+
+        try (Connection connection = new DBConnection().getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                ElectionResult result = new ElectionResult();
+                result.setCandidateName(rs.getString("candidate_name"));
+                result.setValidVoteCount(rs.getLong("valid_vote_count"));
+                return result;
+            }
+
+            return null;
 
         } catch (Exception e) {
             throw new RuntimeException(e);
