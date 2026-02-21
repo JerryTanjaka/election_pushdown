@@ -1,5 +1,6 @@
 package hei.DAO;
 
+import hei.entity.CandidateVoteCount;
 import hei.entity.VoteType;
 import hei.entity.VoteTypeCount;
 import hei.util.DBConnection;
@@ -8,6 +9,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class DataRetriver {
@@ -47,4 +49,30 @@ public class DataRetriver {
             throw new RuntimeException(e);
         }
     }
+    public List<CandidateVoteCount> countValidVotesByCandidate(){
+        String sql= """
+                select c.name as candidate_name, COUNT(v.id) as count
+                from candidate c
+                left join vote v
+                on c.id = v.candidate_id
+                and v.vote_type = 'VALID'
+                group by c.name
+                order by c.name;
+                """;
+        try (Connection connection = new DBConnection().getConnection();
+        PreparedStatement preparedStatement = connection.prepareStatement(sql)){
+        ResultSet resultSet = preparedStatement.executeQuery();
+        List<CandidateVoteCount> candidateVoteCounts = new ArrayList<>();
+        while (resultSet.next()){
+            CandidateVoteCount candidateVoteCount = new CandidateVoteCount();
+            candidateVoteCount.setCandidateName(resultSet.getString("candidate_name"));
+            candidateVoteCount.setValidVoteCount(resultSet.getLong("count"));
+            candidateVoteCounts.add(candidateVoteCount);
+        }
+        return candidateVoteCounts;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
 }
