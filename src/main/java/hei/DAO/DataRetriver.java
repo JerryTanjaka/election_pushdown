@@ -1,6 +1,7 @@
 package hei.DAO;
 
 import hei.entity.CandidateVoteCount;
+import hei.entity.VoteSummary;
 import hei.entity.VoteType;
 import hei.entity.VoteTypeCount;
 import hei.util.DBConnection;
@@ -74,5 +75,26 @@ public class DataRetriver {
             throw new RuntimeException(e);
         }
     }
-    
+    public VoteSummary computeVoteSummary() {
+        String sql = """
+                SELECT
+                  count(CASE WHEN vote_type = 'VALID' THEN 1 END) AS valid_count,
+                  count(CASE WHEN vote_type = 'BLANK' THEN 1 END) AS blank_count,
+                  count(CASE WHEN vote_type = 'NULL' THEN 1 END) AS null_count
+                FROM vote;
+        """;
+        try(Connection connection = new DBConnection().getConnection();
+        PreparedStatement preparedStatement = connection.prepareStatement(sql)){
+            ResultSet resultSet = preparedStatement.executeQuery();
+            VoteSummary result = new VoteSummary();
+            if(resultSet.next()){
+                result.setValidCount(resultSet.getLong("valid_count"));
+                result.setBlankCount(resultSet.getLong("blank_count"));
+                result.setNullCount(resultSet.getLong("null_count"));
+            }
+            return result;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

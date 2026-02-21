@@ -7,6 +7,6 @@ import hei.DAO.DataRetriver;
 public class Main {
     public static void main(String[] args) {
         DataRetriver dataRetriver = new DataRetriver();
-        System.out.println(dataRetriver.countValidVotesByCandidate());
+        System.out.println(dataRetriver.computeVoteSummary());
     }
 }
