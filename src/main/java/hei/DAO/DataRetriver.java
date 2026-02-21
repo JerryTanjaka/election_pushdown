@@ -97,4 +97,26 @@ public class DataRetriver {
             throw new RuntimeException(e);
         }
     }
+    public double computeTurnoutRate(){
+        String sql= """
+                SELECT
+                  (
+                    (SELECT COUNT(DISTINCT voter_id) FROM vote)::decimal / (SELECT COUNT(*) FROM voter)
+                  ) * 100 AS turnout_rate;
+                """;
+        try (Connection connection = new DBConnection().getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                return rs.getDouble("turnout_rate");
+            }
+
+            return 0.0;
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
